@@ -17,7 +17,7 @@ class SpaceClient:
         
         # Inicialización de módulos
         self.contracts = None  # necesitamos construirlos
-        self.features = None # Tenemos que cosntruirlo aun FeatureModule(self)
+        self.featureEvaluators = None # Tenemos que cosntruirlo aun FeatureModule(self)
         
         # Sesión HTTP (se crea bajo demanda)
         self._session: Optional[aiohttp.ClientSession] = None

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Dict, Union, Optional
 
+# Feature error encapsulates the details of possible errors ocurring during feature evaluation
 class FeatureError(BaseModel):
     code: str
     message: str

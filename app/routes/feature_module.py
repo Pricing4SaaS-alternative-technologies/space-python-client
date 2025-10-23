@@ -1,16 +1,18 @@
 import aiohttp
+from typing import Dict, Union
 from config import SpaceClient
 from app.models.feature_eval_result import FeatureEvaluationResult
 
 class FeaturesModule:
     def __init__(self, space_client: SpaceClient):
         self.space_client = space_client
+        self.url = "http://localhost:8080/features"
 
     async def evaluate(self, 
                        user_id: str, 
                        feature_id: str, 
-                       expected_consumption: dict = {}, 
-                       options: dict = {}):
+                       expected_consumption: Dict[str, Union[int, float]] = {}, 
+                       options: Dict[str, bool] = {}):
         """Evalúa una característica para un usuario específico."""
         session = await self.space_client._get_session()
         try:

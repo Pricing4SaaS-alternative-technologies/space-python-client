@@ -3,7 +3,7 @@ from typing import Dict, Union
 from config import SpaceClient
 from app.models.feature_eval_result import FeatureEvaluationResult
 
-class FeaturesModule:
+class FeatureEvalModule:
     def __init__(self, space_client: SpaceClient):
         self.space_client = space_client
         self.url = "http://localhost:8080/features"

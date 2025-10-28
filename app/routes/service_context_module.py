@@ -1,7 +1,12 @@
+import os
 from typing import Optional
 import aiohttp
+from app.models.service_context import Service
 from app.routes.config import SpaceClient
 
+class availability_type:
+    ACTIVE = "active"
+    ARCHIVED = "archived"
 
 class serviceContextModule:
     def __init__(self, space_client: SpaceClient):
@@ -48,9 +53,53 @@ class serviceContextModule:
             if(remote_url):
                 return await session.post_with_url(endpoint,url)
             else:
-                resolved_path = "" #extraer la ruta real 
+                resolved_path = os.path.abspath(url) 
                 return await session.post_with_file_path(endpoint,resolved_path)
         if(service_file):
             return await session.post_with_file(f"/services/{service_name}/pricings",service_file)
         
-    #Introducir resto de operaciones necesarias (postwith..)
+
+    async def change_availability(self, service_name: str, pricing_version: str, availability: availability_type, fallback_subscription: Optional[fallbackSubscription]=None)-> Service:
+        if(availability not in [availability_type.ACTIVE, availability_type.ARCHIVED]):
+            raise ValueError("Invalid availability type")
+        if(availability == availability_type.ARCHIVED and not fallback_subscription):
+            raise ValueError("Fallback subscription is required when archiving a pricing version")
+        session = await self.space_client.get_session()
+        try:
+            response= await session.patch(f"/services/{service_name}/pricings/{pricing_version}?availability={availability}", json=fallback_subscription)
+            response.raise_for_status()
+            service_data = await response.json()
+            return service_data
+        except aiohttp.ClientResponseError as e:
+            print(f"Error changing availability for service {service_name}, pricing version {pricing_version}: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            raise
+    
+    async def add_service(self, file_path: str):
+        form = aiohttp.FormData()
+        
+        resolved_path = os.path.abspath(file_path)
+        file_name= os.path.basename(file_path)
+        
+        with open(resolved_path, 'rb') as file_stream:
+            form.add_field("pricing", file_stream, file_name )
+        
+        session = await self.space_client.get_session()
+        try:
+            timeout = aiohttp.ClientTimeout(total=5)
+            # TODO No se ha introducido limite de archivo o longitud, podria ser necesario actualizarlo o ver metodos alternativos para hacer este en concreto.
+            response = await session.post("/services", data=form,timeout = timeout)
+            response.raise_for_status()
+            service_data = await response.json()
+            return service_data
+        # TODO manejos de errores aun por introducir
+        except aiohttp.ClientResponseError as e:
+            print(f"Error adding service from file {file_path}: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            raise
+        
+# TODO introducir resto de operaciones necesarias(psotwith...)

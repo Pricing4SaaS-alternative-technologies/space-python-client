@@ -11,7 +11,7 @@ class SpaceConnectionOptions:
         if not self.url or not self.api_key:
             raise ValueError("Both 'url' and 'apiKey' are required to connect to Space.")
         
-        if self.timeout <= 0:
+        if self.timeout is not None and self.timeout <= 0:
             raise ValueError("Invalid 'timeout' value. It must be a positive number.")
         
         if not (self.url.startswith("http://") or self.url.startswith("https://")):

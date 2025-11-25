@@ -1,5 +1,8 @@
 
 from typing import Optional
+from contract_module import ContractModule
+from feature_eval_module import FeatureEvalModule
+from service_context_module import ServiceContextModule
 import aiohttp
 
 
@@ -16,8 +19,9 @@ class SpaceClient:
         self.timeout = aiohttp.ClientTimeout(total=timeout/1000)  # ms a segundos
         
         # Inicialización de módulos
-        self.contracts = None  # necesitamos construirlos
-        self.featureEvaluators = None # Tenemos que cosntruirlo aun FeatureModule(self)
+        self.contracts = ContractModule  # necesitamos construirlos
+        self.featureEvaluators = FeatureEvalModule
+        self.service_context = ServiceContextModule # Tenemos que cosntruirlo aun FeatureModule(self)
         
         # Sesión HTTP (se crea bajo demanda)
         self._session: Optional[aiohttp.ClientSession] = None

@@ -10,7 +10,7 @@ class availability_type:
     ACTIVE = "active"
     ARCHIVED = "archived"
 
-class serviceContextModule:
+class ServiceContextModule:
     def __init__(self, space_client: SpaceClient):
         self.space_client = space_client
         

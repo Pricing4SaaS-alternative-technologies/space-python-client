@@ -19,9 +19,9 @@ class SpaceClient:
         self.timeout = aiohttp.ClientTimeout(total=timeout/1000)  # ms a segundos
         
         # Inicialización de módulos
-        self.contracts = ContractModule  # necesitamos construirlos
-        self.featureEvaluators = FeatureEvalModule
-        self.service_context = ServiceContextModule # Tenemos que cosntruirlo aun FeatureModule(self)
+        self.contracts = ContractModule(self)  # necesitamos construirlos
+        self.featureEvaluators = FeatureEvalModule(self)
+        self.service_context = ServiceContextModule(self) # Tenemos que cosntruirlo aun FeatureModule(self)
         
         # Sesión HTTP (se crea bajo demanda)
         self._session: Optional[aiohttp.ClientSession] = None

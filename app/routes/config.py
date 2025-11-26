@@ -1,8 +1,8 @@
 
 from typing import Optional
-from contract_module import ContractModule
-from feature_eval_module import FeatureEvalModule
-from service_context_module import ServiceContextModule
+from .contract_module import ContractModule
+from .feature_eval_module import FeatureEvalModule
+from .service_context_module import ServiceContextModule
 import aiohttp
 
 

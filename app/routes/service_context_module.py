@@ -1,10 +1,14 @@
+from __future__ import annotations
+import aiohttp
+from typing import TYPE_CHECKING, Any
+if TYPE_CHECKING:
+    from .config import SpaceClient
 from datetime import datetime
 import os
 from typing import Optional
 import aiohttp
 from app.models.contracts import FallbackSubscription
 from app.models.service_context import *
-from app.routes.config import SpaceClient
 
 class availability_type:
     ACTIVE = "active"

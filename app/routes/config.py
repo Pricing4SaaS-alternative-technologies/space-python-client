@@ -16,7 +16,7 @@ class SpaceClient:
         # Configuración básica
         self.http_url = f"{url.rstrip('/')}/api/v1"
         self.api_key = api_key
-        self.timeout = aiohttp.ClientTimeout(total=timeout/1000)  # ms a segundos
+        self.timeout_ms = timeout
         
         # Inicialización de módulos
         self.contracts = ContractModule(self)  # necesitamos construirlos
@@ -30,9 +30,10 @@ class SpaceClient:
     async def _get_session(self) -> aiohttp.ClientSession:
         """Crea o reutiliza una sesión HTTP."""
         if self._session is None or self._session.closed:
+            timeout = aiohttp.ClientTimeout(total=self.timeout_ms/1000)  # ms a segundos
             self._session = aiohttp.ClientSession(
                 headers={'x-api-key': self.api_key},
-                timeout=self.timeout
+                timeout=timeout
             )
         return self._session
 

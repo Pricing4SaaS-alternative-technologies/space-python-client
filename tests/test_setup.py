@@ -1,6 +1,6 @@
 import pytest
 from app.routes.config import SpaceClient
-from tests.utils.setup import space_client
+
 
 @pytest.mark.asyncio
 async def test_space_client_setup(space_client):

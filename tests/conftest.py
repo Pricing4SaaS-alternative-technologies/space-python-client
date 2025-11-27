@@ -6,7 +6,7 @@ TEST_SPACE_URL =  "http://localhost:5403"
 TEST_API_KEY = "76494fc1a6db95d175412b130c64ffa8f73b0adc8480c9891df98507c7e4bb78"
 TEST_SERVICE_PATH = "tests/resources/pricings/TomatoMeter.yml"
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 async def space_client():
     """
     Crea y devuelve un SpaceClient listo para tests.

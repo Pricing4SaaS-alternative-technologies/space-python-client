@@ -1,7 +1,7 @@
 from typing import Optional
-from contract_module import ContractModule
-from feature_eval_module import FeatureEvalModule
-from service_context_module import ServiceContextModule
+from .contract_module import ContractModule
+from .feature_eval_module import FeatureEvalModule
+from .service_context_module import ServiceContextModule
 import aiohttp
 import asyncio
 
@@ -16,7 +16,7 @@ class SpaceClient:
         # Configuración básica
         self.http_url = f"{url.rstrip('/')}/api/v1"
         self.api_key = api_key
-        self.timeout = aiohttp.ClientTimeout(total=timeout/1000)  # ms a segundos
+        self.timeout_ms = timeout
         
         # Inicialización de módulos
         self.contracts = ContractModule(self)
@@ -33,7 +33,7 @@ class SpaceClient:
             timeout = aiohttp.ClientTimeout(total=self.timeout_ms/1000)
             self._session = aiohttp.ClientSession(
                 headers={'x-api-key': self.api_key},
-                timeout=self.timeout
+                timeout=timeout
             )
         return self._session
 

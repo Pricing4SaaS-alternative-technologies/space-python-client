@@ -14,12 +14,12 @@ async def test_space_client_setup(space_client):
         # Si no está disponible, el test pasa igual (no es un fallo del código)
         if ok:
             assert ok is True
-            print("✓ Conectado a SPACE")
+            print("Conectado a SPACE")
         else:
-            print("ℹ SPACE no disponible, pero el cliente se creó correctamente")
+            print("SPACE no disponible, pero el cliente se creó correctamente")
             
     except Exception as e:
-        print(f"ℹ Error durante healthcheck (esperado si SPACE no está ejecutándose): {e}")
+        print(f"Error durante healthcheck (esperado si SPACE no está ejecutándose): {e}")
     
     # Verificar que los módulos existen
     assert hasattr(space_client, "service_context")

@@ -164,7 +164,7 @@ class ServiceContextModule:
                     
                     response.raise_for_status()  # Lanza excepción para códigos 400/500
                     service_data = await response.json()
-                    print(f"✅ Servicio creado exitosamente: {service_data}")
+                    print(f"Servicio creado exitosamente: {service_data}")
                     return service_data
                     
         except aiohttp.ClientResponseError as e:

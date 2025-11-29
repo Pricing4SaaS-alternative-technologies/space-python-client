@@ -132,32 +132,46 @@ class ServiceContextModule:
             print(f"Unexpected error: {e}")
             raise
     
-    async def add_service(self, file_path: str)-> Service:
-        form = aiohttp.FormData()
-        
-        resolved_path = os.path.abspath(file_path)
-        file_name= os.path.basename(file_path)
-        
-        with open(resolved_path, 'rb') as file_stream:
-            form.add_field("pricing", file_stream, file_name )
-        
-        session = await self.space_client.get_session()
+    async def add_service(self, file_path: str):
         try:
-            timeout = aiohttp.ClientTimeout(total=5)
-            # TODO No se ha introducido limite de archivo o longitud, podria ser necesario actualizarlo o ver metodos alternativos para hacer este en concreto.
-            response = await session.post("/services", data=form,timeout = timeout)
-            response.raise_for_status()
-            service_data = await response.json()
-            return service_data
-        #Los errores que devuelve el archivo original se han replicado en la medida de los posible, 
-        #TODO: Revisar y meter los raise necesarios en TODAS las funciones
+            # Verificar que el archivo existe
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"Archivo no encontrado: {file_path}")
+            
+            # Crear FormData con el archivo
+            with open(file_path, 'rb') as f:
+                data = aiohttp.FormData()
+                data.add_field(
+                    'file', 
+                    f.read(),
+                    filename=os.path.basename(file_path),
+                    content_type='application/yaml'
+                )
+                
+                # Obtener sesión y hacer la petición
+                session = await self.client._get_session()
+                timeout = aiohttp.ClientTimeout(total=30)  # 30 segundos para subir archivos
+                
+                async with session.post(
+                    f"{self.client.http_url}/services",
+                    data=data,
+                    timeout=timeout
+                ) as response:
+                    
+                    response.raise_for_status()  # Lanza excepción para códigos 400/500
+                    service_data = await response.json()
+                    print(f"✅ Servicio creado exitosamente: {service_data}")
+                    return service_data
+                    
         except aiohttp.ClientResponseError as e:
-            print(f"Error adding service from file {file_path}: {e}")
-            return None
-        except aiohttp.ClientConnectionError as e:
-            print(f"Connection error while adding service from file {file_path}: {e}")
-            return None
-        except Exception as e:
-            print(f"Unexpected error: {e}")
+            print(f"Error del servidor al añadir servicio {file_path}: {e.status} - {e.message}")
             raise
-        
+        except aiohttp.ClientConnectionError as e:
+            print(f"Error de conexión al añadir servicio {file_path}: {e}")
+            raise
+        except FileNotFoundError as e:
+            print(f"Archivo no encontrado: {e}")
+            raise
+        except Exception as e:
+            print(f"Error inesperado al añadir servicio {file_path}: {e}")
+            raise

@@ -1,9 +1,9 @@
-
 from typing import Optional
 from contract_module import ContractModule
 from feature_eval_module import FeatureEvalModule
 from service_context_module import ServiceContextModule
 import aiohttp
+import asyncio
 
 
 class SpaceClient:
@@ -19,9 +19,9 @@ class SpaceClient:
         self.timeout = aiohttp.ClientTimeout(total=timeout/1000)  # ms a segundos
         
         # Inicialización de módulos
-        self.contracts = ContractModule(self)  # necesitamos construirlos
+        self.contracts = ContractModule(self)
         self.featureEvaluators = FeatureEvalModule(self)
-        self.service_context = ServiceContextModule(self) # Tenemos que cosntruirlo aun FeatureModule(self)
+        self.service_context = ServiceContextModule(self)
         
         # Sesión HTTP (se crea bajo demanda)
         self._session: Optional[aiohttp.ClientSession] = None
@@ -30,6 +30,7 @@ class SpaceClient:
     async def _get_session(self) -> aiohttp.ClientSession:
         """Crea o reutiliza una sesión HTTP."""
         if self._session is None or self._session.closed:
+            timeout = aiohttp.ClientTimeout(total=self.timeout_ms/1000)
             self._session = aiohttp.ClientSession(
                 headers={'x-api-key': self.api_key},
                 timeout=self.timeout
@@ -39,13 +40,29 @@ class SpaceClient:
     async def is_connected_to_space(self) -> bool:
         """Verifica la conexión con el servidor."""
         try:
-            session = await self._get_session()
-            async with session.get(
-                f"{self.http_url}/healthcheck",
-                skip_auto_headers=['x-api-key']  # Healthcheck no necesita autenticación
-            ) as response:
-                data = await response.json()
-                return response.status == 200 and bool(data.get("message"))
+            # Crear una sesión temporal independiente para evitar conflictos
+            timeout = aiohttp.ClientTimeout(total=5)
+            
+            async with aiohttp.ClientSession(timeout=timeout) as temp_session:
+                async with temp_session.get(
+                    f"{self.http_url}/healthcheck",
+                    headers={'x-api-key': self.api_key}
+                ) as response:
+                    if response.status == 200:
+                        try:
+                            data = await response.json()
+                            return bool(data.get("message"))
+                        except:
+                            # Si no es JSON válido pero status es 200, considerar éxito
+                            return True
+                    return False
+                    
+        except asyncio.TimeoutError:
+            print("Timeout: SPACE no responde después de 5 segundos")
+            return False
+        except aiohttp.ClientConnectorError:
+            print("Error: No se puede conectar al servidor SPACE")
+            return False
         except Exception as e:
             print(f"Error de conexión: {e}")
             return False
@@ -54,6 +71,7 @@ class SpaceClient:
         """Cierra la sesión HTTP."""
         if self._session and not self._session.closed:
             await self._session.close()
+            self._session = None
 
     # Soporte para 'async with'
     async def __aenter__(self):

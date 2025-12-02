@@ -8,13 +8,19 @@ import asyncio
 
 class SpaceClient:
     
-    def __init__(self, url: str, api_key: str, timeout: int = 5000):
+    def __init__(self, url: str, api_key: str, timeout: int = 5000, api_prefix: str = "api/v1"):
         # Validación de parámetros
         if not url or not api_key:
             raise ValueError("Se requieren url y api_key")
-        
-        # Configuración básica
-        self.http_url = f"{url.rstrip('/')}/api/v1"
+
+        # Configuración básica: permitir personalizar el prefijo de la API
+        # Si se pasa None o cadena vacía, no se añade prefijo (usar rutas directas como http://host:port/services)
+        self.api_prefix = api_prefix
+        if api_prefix:
+            self.http_url = f"{url.rstrip('/')}/{api_prefix.strip('/')}"
+        else:
+            self.http_url = url.rstrip('/')
+
         self.api_key = api_key
         self.timeout_ms = timeout
         

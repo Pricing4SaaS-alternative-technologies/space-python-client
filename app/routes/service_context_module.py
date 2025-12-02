@@ -146,18 +146,21 @@ class ServiceContextModule:
             with open(file_path, 'rb') as f:
                 data = aiohttp.FormData()
                 data.add_field(
-                    'file', 
+                    'pricing', 
                     f.read(),
                     filename=os.path.basename(file_path),
                     content_type='application/yaml'
                 )
                 
-                # Obtener sesión y hacer la petición
-                session = await self.client._get_session()
+                print('este es el data', data)
+                
+                
+                # Obtener sesión y hacer la petición - CAMBIADO: usar self.space_client
+                session = await self.space_client._get_session()
                 timeout = aiohttp.ClientTimeout(total=30)  # 30 segundos para subir archivos
                 
                 async with session.post(
-                    f"{self.client.http_url}/services",
+                    f"{self.space_client.http_url}/services",  # CAMBIADO: usar self.space_client
                     data=data,
                     timeout=timeout
                 ) as response:
@@ -179,3 +182,5 @@ class ServiceContextModule:
         except Exception as e:
             print(f"Error inesperado al añadir servicio {file_path}: {e}")
             raise
+        
+        

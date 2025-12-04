@@ -138,11 +138,9 @@ class ServiceContextModule:
     
     async def add_service(self, file_path: str):
         try:
-            # Verificar que el archivo existe
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"Archivo no encontrado: {file_path}")
             
-            # Crear FormData con el archivo
             with open(file_path, 'rb') as f:
                 data = aiohttp.FormData()
                 data.add_field(
@@ -150,22 +148,18 @@ class ServiceContextModule:
                     f.read(),
                     filename=os.path.basename(file_path),
                     content_type='application/yaml'
-                )
+                )                
                 
-                print('este es el data', data)
-                
-                
-                # Obtener sesión y hacer la petición - CAMBIADO: usar self.space_client
                 session = await self.space_client._get_session()
-                timeout = aiohttp.ClientTimeout(total=30)  # 30 segundos para subir archivos
+                timeout = aiohttp.ClientTimeout(total=30) 
                 
                 async with session.post(
-                    f"{self.space_client.http_url}/services",  # CAMBIADO: usar self.space_client
+                    f"{self.space_client.http_url}/services",
                     data=data,
                     timeout=timeout
                 ) as response:
                     
-                    response.raise_for_status()  # Lanza excepción para códigos 400/500
+                    response.raise_for_status()
                     service_data = await response.json()
                     print(f"Servicio creado exitosamente: {service_data}")
                     return service_data

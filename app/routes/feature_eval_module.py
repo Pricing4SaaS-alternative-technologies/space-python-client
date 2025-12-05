@@ -1,6 +1,9 @@
+from __future__ import annotations
 import aiohttp
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .config import SpaceClient
 from typing import Dict, Union
-from config import SpaceClient
 from app.models.feature_eval_result import FeatureEvaluationResult
 
 class FeatureEvalModule:

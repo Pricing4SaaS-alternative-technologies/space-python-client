@@ -1,9 +1,12 @@
+from __future__ import annotations
 import aiohttp
-from config import SpaceClient
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .config import SpaceClient
 from app.models.contracts import ContractToCreate, Subscription
  
 class ContractModule:
-    def __init__(self, space_client: SpaceClient):
+    def __init__(self, space_client: "SpaceClient"):
         self.space_client = space_client
         
     async def get_contracts(self, user_id: str):

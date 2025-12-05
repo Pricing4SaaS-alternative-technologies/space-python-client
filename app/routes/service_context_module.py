@@ -53,7 +53,7 @@ class ServiceContextModule:
         with open(file_path, 'rb') as file_stream:
             form.add_field("pricing", file_stream, file_name )
         
-        session = await self.space_client.get_session()
+        session = await self.space_client._get_session()
         try:
             response = await session.post(endpoint, data=form)
             response.raise_for_status()
@@ -70,7 +70,7 @@ class ServiceContextModule:
         form = aiohttp.FormData()
         form.add_field("file", file_bytes, filename=f"{datetime.now().timestamp()}.yaml" )
         
-        session = await self.space_client.get_session()
+        session = await self.space_client._get_session()
         try:
             response = await session.post(endpoint, data=form)
             response.raise_for_status()
@@ -86,7 +86,7 @@ class ServiceContextModule:
     async def _post_with_url(self, endpoint: str, url: str)-> Service:
         payload = {"pricing": url}
         
-        session = await self.space_client.get_session()
+        session = await self.space_client._get_session()
         try:
             response = await session.post(endpoint, json=payload)
             response.raise_for_status()
@@ -123,9 +123,13 @@ class ServiceContextModule:
             raise ValueError("Invalid availability type")
         if(availability == availability_type.ARCHIVED and not fallback_subscription):
             raise ValueError("Fallback subscription is required when archiving a pricing version")
-        session = await self.space_client.get_session()
+        session = await self.space_client._get_session()
         try:
-            response= await session.patch(f"/services/{service_name}/pricings/{pricing_version}?availability={availability}", json=fallback_subscription)
+            url = f"{self.space_client.http_url}/services/{service_name}/pricings/{pricing_version}?availability={availability}"
+            if fallback_subscription:
+                response = await session.patch(url, json=fallback_subscription)
+            else:
+                response = await session.patch(url)
             response.raise_for_status()
             service_data = await response.json()
             return service_data

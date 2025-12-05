@@ -18,7 +18,7 @@ features:
     type: AUTOMATION
     automationType: TRACKING
   basicAnalytics:
-    description: Check basi weekly productivity analytics, such as the Tomato Score or the number of pomodoros completed in the last week. 
+    description: Check basic weekly productivity analytics, such as the Tomato Score or the number of pomodoros completed in the last week. 
     valueType: BOOLEAN
     defaultValue: true
     expression: pricingContext['features']['basicAnalytics']

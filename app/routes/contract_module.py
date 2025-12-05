@@ -1,9 +1,8 @@
 from __future__ import annotations
 import aiohttp
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .config import SpaceClient
-##from .config import SpaceClient
 from app.models.contracts import ContractToCreate, Subscription
  
 class ContractModule:

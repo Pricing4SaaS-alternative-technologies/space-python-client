@@ -1,12 +1,11 @@
 from __future__ import annotations
 import aiohttp
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .config import SpaceClient
 from datetime import datetime
 import os
 from typing import Optional
-import aiohttp
 from app.models.contracts import FallbackSubscription
 from app.models.service_context import *
 

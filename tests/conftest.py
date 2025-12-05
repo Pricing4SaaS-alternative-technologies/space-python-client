@@ -42,8 +42,8 @@ features:
     
     try:
         os.unlink(temp_yaml_path) # Eliminar el archivo temporal
-    except:
-        pass
+    except Exception as e:
+        print(f"Error deleting temporary file: {e}")
     
     yield client
 

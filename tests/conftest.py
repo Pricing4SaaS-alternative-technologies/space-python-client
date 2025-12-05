@@ -7,11 +7,12 @@ from app.routes.config import SpaceClient
 
 TEST_SPACE_URL = "http://localhost:5403"
 TEST_API_KEY = "57ab59b541bafc971b7588a192661ed01e3e354a9f1464f868e28a4b66931b01"
+TEST_API_KEY_DANIEL = "5878a0e39f43c66a3aa68adf80f675f2d96c46bdbe9ce58816649b768d3a671f"
 
 
 @pytest_asyncio.fixture
 async def space_client():
-    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY)
+    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY_DANIEL)
     
     service_name = None
     unique_id = uuid.uuid4().hex[:8]
@@ -55,9 +56,7 @@ features:
         try:
             session = await client._get_session()
             delete_url = f"{f"{client.http_url}/services"}"
-            async with session.delete(delete_url) as response:
-                if response.status in [200, 204]:
-                    print(f"✅ Servicio '{service_name}' borrado")
+            await session.delete(delete_url)
         except Exception as e:
             print(f"Error borrando: {e}")
 

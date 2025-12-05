@@ -1,7 +1,9 @@
+import aiohttp
 import pytest
 import tempfile
 import uuid
 import os
+from app.models.service_context import Service
 from app.routes.service_context_module import availability_type
 
 class TestServiceContext:
@@ -26,11 +28,14 @@ features:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
             f.write(yaml)
             temp_path = f.name
-        
         try:
             await space_client.service_context.add_service(temp_path)
             service = await space_client.service_context.get_service(service_name)
+            
             assert service is not None
+            #assert isinstance(service, Service)
+            assert service["name"] == service_name
+            
         finally:
             try:
                 os.unlink(temp_path)
@@ -41,7 +46,9 @@ features:
     async def test_get_service_not_found(self, space_client):
         service_name = f"NotFound_{uuid.uuid4().hex[:8]}"
         result = await space_client.service_context.get_service(service_name)
-        assert result is None
+        print("RESULTADO: ",result)
+        assert isinstance(result, aiohttp.ClientResponseError)
+        assert result.status == 404 
 
     @pytest.mark.asyncio
     async def test_add_service(self, space_client):
@@ -66,6 +73,7 @@ features:
         try:
             result = await space_client.service_context.add_service(temp_path)
             assert result is not None
+            assert result["name"] == service_name
         finally:
             try:
                 os.unlink(temp_path)

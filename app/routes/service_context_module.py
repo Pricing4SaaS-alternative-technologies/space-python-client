@@ -17,16 +17,19 @@ class ServiceContextModule:
     def __init__(self, space_client: SpaceClient):
         self.space_client = space_client
         
-    async def get_service(self,service_name: str):
+    async def get_service(self,service_name: str)->Service:
         session = await self.space_client._get_session()
         try:
             response = await session.get(f"{self.space_client.http_url}/services/{service_name}")
             response.raise_for_status()
             service_data = await response.json()
+            print(f"SERVICIO: {service_data}")
             return service_data
+        
+            
         except aiohttp.ClientResponseError as e:
             print(f"Error fetching service {service_name}: {e}")
-            return None
+            return e
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -164,7 +167,7 @@ class ServiceContextModule:
                     
                     response.raise_for_status()
                     service_data = await response.json()
-                    print(f"Servicio creado exitosamente: {service_data}")
+                    #print(f"Servicio creado exitosamente: {service_data}")
                     return service_data
                     
         except aiohttp.ClientResponseError as e:

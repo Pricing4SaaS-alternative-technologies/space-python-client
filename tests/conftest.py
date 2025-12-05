@@ -11,10 +11,9 @@ TEST_API_KEY = "57ab59b541bafc971b7588a192661ed01e3e354a9f1464f868e28a4b66931b01
 
 @pytest_asyncio.fixture
 async def space_client():
-    """Único fixture necesario: crea cliente + servicio, limpia después."""
     client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY)
     
-    # Crear servicio único
+    service_name = None
     unique_id = uuid.uuid4().hex[:8]
     saas_name = f"TomatoMeter_{unique_id}"
     
@@ -30,23 +29,19 @@ features:
     defaultValue: true
     type: DOMAIN"""
     
-    # Archivo temporal
     with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False, encoding='utf-8') as f:
         f.write(yaml_content)
         temp_yaml_path = f.name
-    
-    service_name = None
     
     try:
         result = await client.service_context.add_service(temp_yaml_path)
         if result:
             service_name = saas_name
     except Exception as e:
-        print(f"⚠ Error: {e}")
+        print(f"Error: {e}")
     
-    # Limpiar archivo
     try:
-        os.unlink(temp_yaml_path)
+        os.unlink(temp_yaml_path) # Eliminar el archivo temporal
     except:
         pass
     
@@ -64,7 +59,7 @@ features:
                 if response.status in [200, 204]:
                     print(f"✅ Servicio '{service_name}' borrado")
         except Exception as e:
-            print(f"⚠ Error borrando: {e}")
+            print(f"Error borrando: {e}")
 
     await client.close()
 
@@ -73,7 +68,7 @@ features:
 
 
 #-------------------------------------------------------------------------------------------------------------
-# FIXTURE DE SESIÓN: LIMPIEZA FINAL DE TODOS LOS SERVICIOS
+# FIXTURE DE SESIÓN: LIMPIEZA FINAL DE TODOS LOS SERVICIOS (POR SI FUERA NECESARIO)
 #-------------------------------------------------------------------------------------------------------------
 
 '''

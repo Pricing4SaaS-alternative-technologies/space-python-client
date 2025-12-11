@@ -44,19 +44,24 @@ class ServiceContextModule:
             print(f"Unexpected error: {e}")
             raise
 
-    async def _post_with_file_path(self, endpoint: str, file_path: str)-> Service:
-        form = aiohttp.FormData()
-        file_name= os.path.basename(file_path)
-        
-        with open(file_path, 'rb') as file_stream:
-            form.add_field("pricing", file_stream, file_name )
-        
-        session = await self.space_client._get_session()
+    async def _post_with_file_path(self, endpoint: str, file_path: str)-> Service:        
         try:
-            response = await session.post(endpoint, data=form)
-            response.raise_for_status()
-            data = await response.json()
-            return data
+            form = aiohttp.FormData()
+            with open(file_path, 'rb') as f:
+                form.add_field(
+                    'pricing', 
+                    f.read(),
+                    filename=os.path.basename(file_path),
+                    content_type='application/yaml'
+                )
+            
+                session = await self.space_client._get_session()
+                
+                response = await session.post(f"{self.space_client.http_url}{endpoint}", data=form)
+                response.raise_for_status()
+                data = await response.json()
+                return data
+            
         except aiohttp.ClientResponseError as e:
             print(f"Error posting file to {endpoint}: {e}")
             return e
@@ -64,22 +69,20 @@ class ServiceContextModule:
             print(f"Unexpected error: {e}")
             raise
     
-    async def _post_with_file(self, endpoint: str, file_bytes: bytes)-> Service:
-        form = aiohttp.FormData()
-        form.add_field("file", file_bytes, filename=f"{datetime.now().timestamp()}.yaml" )
-        
-        session = await self.space_client._get_session()
-        try:
-            response = await session.post(endpoint, data=form)
+    async def _post_with_file(self, endpoint: str, file: bytes) -> dict:
+        async with aiohttp.ClientSession() as session:
+            form = aiohttp.FormData()
+            form.add_field('file', file, filename='service.yml', content_type='application/x-yaml')
+            
+            # Construye la URL completa usando la base_url del SpaceClient
+            url = f"{self.space_client.base_url}{endpoint}"
+            
+            # También añade el header de API key si es necesario
+            headers = {"Authorization": f"Bearer {self.space_client.api_key}"}
+            
+            response = await session.post(url, data=form, headers=headers)
             response.raise_for_status()
-            data = await response.json()
-            return data
-        except aiohttp.ClientResponseError as e:
-            print(f"Error posting file to {endpoint}: {e}")
-            return e
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            raise
+            return await response.json()
 
     async def _post_with_url(self, endpoint: str, url: str)-> Service:
         payload = {"pricing": url}
@@ -123,11 +126,14 @@ class ServiceContextModule:
             raise ValueError("Fallback subscription is required when archiving a pricing version")
         session = await self.space_client._get_session()
         try:
-            url = f"{self.space_client.http_url}/services/{service_name}/pricings/{pricing_version}?availability={availability}"
+            availability_good = availability.lower()
+            url = f"{self.space_client.http_url}/services/{service_name}/pricings/{pricing_version}?availability={availability_good}"
+            print("fallback_subscription:", fallback_subscription)
             if fallback_subscription:
-                response = await session.patch(url, json=fallback_subscription)
+                response = await session.put(url, json=fallback_subscription)
+                print(f"respuesta: {response}")
             else:
-                response = await session.patch(url)
+                response = await session.put(url)
             response.raise_for_status()
             service_data = await response.json()
             return service_data

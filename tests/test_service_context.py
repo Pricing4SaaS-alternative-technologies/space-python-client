@@ -220,3 +220,91 @@ features:
                 os.unlink(temp_path)
             except:
                 pass
+            
+            
+    @pytest.mark.asyncio
+    async def test_change_pricing_availability_with_fallback_subscription(self, space_client):
+        """Test de change_pricing_availability con fallback_subscription"""
+        unique_id = uuid.uuid4().hex[:8]
+        service_name = f"FallbackTest_{unique_id}"
+        
+        unique_id2 = uuid.uuid4().hex[:8]
+        service_name2 = f"FallbackTest_{unique_id2}"
+        
+        yaml = f"""saasName: {service_name}
+syntaxVersion: "3.0"
+version: "1.0.0"
+createdAt: "2025-01-01"
+currency: USD
+features:
+  basic:
+    description: Test
+    valueType: BOOLEAN
+    defaultValue: true
+    type: DOMAIN
+plans:
+  BASIC:
+    description: Basic plan
+    price: 0.0
+    unit: user/month
+    features: null
+    usageLimits: null"""
+
+        yaml2 = f"""saasName: {service_name}
+syntaxVersion: "3.0"
+version: "1.0.1"
+createdAt: "2025-01-01"
+currency: USD
+features:
+  basic:
+    description: Test
+    valueType: BOOLEAN
+    defaultValue: true
+    type: DOMAIN
+plans:
+  BASIC:
+    description: Basic plan
+    price: 1.0
+    unit: user/month
+    features: null
+    usageLimits: null"""
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+            f.write(yaml)
+            temp_path = f.name
+            
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+            f.write(yaml2)
+            temp_path2 = f.name
+        
+        try:
+            await space_client.service_context.add_service(temp_path)
+            await space_client.service_context.add_pricing(
+                service_name=service_name,
+                url=temp_path2
+            )
+            
+            # Crear un objeto de suscripción de fallback
+            fallback_subscription = {
+                "subscriptionPlan": "BASIC",
+                "additionalAddOns": {}
+            }
+            print('este es el name', await space_client.service_context.get_service(service_name))
+            
+            # Intentar archivar con fallback subscription
+            result = await space_client.service_context.change_pricing_availability(
+                service_name=service_name,
+                pricing_version="1.0.0",
+                availability="ARCHIVED",
+                fallback_subscription=fallback_subscription
+            )
+            
+            print('resultado final:', result)
+            assert result is not None
+            
+        finally:
+            try:
+                os.unlink(temp_path)
+                os.unlink(temp_path2)
+            except:
+                pass

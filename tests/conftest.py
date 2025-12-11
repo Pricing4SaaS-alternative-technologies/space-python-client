@@ -6,14 +6,14 @@ import uuid
 from app.routes.config import SpaceClient
 
 TEST_SPACE_URL = "http://localhost:5403"
-TEST_API_KEY = "57ab59b541bafc971b7588a192661ed01e3e354a9f1464f868e28a4b66931b01"
+TEST_API_KEY_PABLO = "57ab59b541bafc971b7588a192661ed01e3e354a9f1464f868e28a4b66931b01"
 TEST_API_KEY_DANIEL = "2b5de17e4e43561b174f9bf6d6b3e961084be773878601d14f75f7d01a29911e"
 
 
 
 @pytest_asyncio.fixture
 async def space_client():
-    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY_DANIEL)
+    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY_PABLO)
     
     service_name = None
     unique_id = uuid.uuid4().hex[:8]

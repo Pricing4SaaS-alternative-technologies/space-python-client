@@ -59,3 +59,7 @@ class PeriodUnit(str, Enum):
     DAY = "DAY"
     MONTH = "MONTH"
     YEAR = "YEAR"
+    
+class availability_type:
+    ACTIVE = "ACTIVE"
+    ARCHIVED = "ARCHIVED"

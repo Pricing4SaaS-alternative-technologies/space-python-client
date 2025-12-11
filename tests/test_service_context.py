@@ -3,8 +3,6 @@ import pytest
 import tempfile
 import uuid
 import os
-from app.models.service_context import Service
-from app.routes.service_context_module import availability_type
 
 class TestServiceContext:
     
@@ -33,7 +31,6 @@ features:
             service = await space_client.service_context.get_service(service_name)
             
             assert service is not None
-            #assert isinstance(service, Service)
             assert service["name"] == service_name
             
         finally:
@@ -45,10 +42,13 @@ features:
     @pytest.mark.asyncio
     async def test_get_service_not_found(self, space_client):
         service_name = f"NotFound_{uuid.uuid4().hex[:8]}"
-        result = await space_client.service_context.get_service(service_name)
-        print("RESULTADO: ",result)
-        assert isinstance(result, aiohttp.ClientResponseError)
-        assert result.status == 404 
+        try:
+            
+            await space_client.service_context.get_service(service_name)
+
+        except aiohttp.ClientResponseError as e:
+            assert e.status == 404
+            assert e.message == "Not Found"
 
     @pytest.mark.asyncio
     async def test_add_service(self, space_client):
@@ -93,15 +93,55 @@ features:
                 service_file=b"dummy"
             )
 
+    @pytest.mark.asyncio
+    async def test_get_pricing(self, space_client):
+        unique_id = uuid.uuid4().hex[:8]
+        service_name = f"Test_{unique_id}"
+        
+        yaml = f"""saasName: {service_name}
+syntaxVersion: "3.0"
+version: "1.0.0"
+createdAt: "2025-01-01"
+currency: USD
+features:
+  basic:
+    description: Test
+    valueType: BOOLEAN
+    defaultValue: true
+    type: DOMAIN"""
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+            f.write(yaml)
+            temp_path = f.name
+        try:
+            await space_client.service_context.add_service(temp_path)
+            pricing = await space_client.service_context.get_pricing(service_name,"1.0.0")
+            
+            assert pricing is not None
+            assert pricing["currency"] == "USD"
+            assert "basic" in pricing["features"]
+            
+        finally:
+            try:
+                os.unlink(temp_path)
+            except:
+                pass
+
+
     @pytest.mark.asyncio 
-    async def test_get_pricing_404(self, space_client):
+    async def test_get_pricing_not_found(self, space_client):
         """Test: get_pricing con servicio no existente"""
         service_name = f"NoPricing_{uuid.uuid4().hex[:8]}"
-        result = await space_client.service_context.get_pricing(service_name, {})
-        assert result is None
+        try:
+            
+            await space_client.service_context.get_pricing(service_name, "1.0.0")
+        except aiohttp.ClientResponseError as e:
+            assert e.status == 404
+            assert e.message == "Not Found"
+            
 
     @pytest.mark.asyncio
-    async def test_change_pricing_availability_real(self, space_client):
+    async def test_change_pricing_availability_without_fallback_subscription(self, space_client):
         """Test de change_pricing_availability"""
         unique_id = uuid.uuid4().hex[:8]
         service_name = f"ChangeTest_{unique_id}"
@@ -122,20 +162,59 @@ features:
             f.write(yaml)
             temp_path = f.name
         
-        try:
-            
+        try: 
             await space_client.service_context.add_service(temp_path)
-            
-            result = await space_client.service_context.change_pricing_availability(
+            await space_client.service_context.change_pricing_availability(
                 service_name=service_name,
                 pricing_version="1.0.0",
-                availability=availability_type.ACTIVE,
+                availability="ARCHIVED",
                 fallback_subscription=None
             )
-            
-        except Exception as e:
-            print(f"change_pricing_availability falló: {e}")
-            
+  
+        except ValueError as e:
+            #si entramos aqui es corredcto
+            assert str(e) == "Fallback subscription is required when archiving a pricing version"
+        finally:
+            try:
+                os.unlink(temp_path)
+            except:
+                pass
+
+
+    @pytest.mark.asyncio
+    async def test_change_pricing_availability_to_non_existent(self, space_client):
+        """Test de change_pricing_availability"""
+        unique_id = uuid.uuid4().hex[:8]
+        service_name = f"ChangeTest_{unique_id}"
+        
+        yaml = f"""saasName: {service_name}
+syntaxVersion: "3.0"
+version: "1.0.0"
+createdAt: "2025-01-01"
+currency: USD
+features:
+  basic:
+    description: Test
+    valueType: BOOLEAN
+    defaultValue: true
+    type: DOMAIN"""
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+            f.write(yaml)
+            temp_path = f.name
+        
+        try: 
+            await space_client.service_context.add_service(temp_path)
+            await space_client.service_context.change_pricing_availability(
+                service_name=service_name,
+                pricing_version="1.0.0",
+                availability="PUBLISHED",
+                fallback_subscription=None
+            )
+  
+        except ValueError as e:
+            #si entramos aqui es corredcto
+            assert str(e) == "Invalid availability type"
         finally:
             try:
                 os.unlink(temp_path)

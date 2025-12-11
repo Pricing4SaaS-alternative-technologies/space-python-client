@@ -9,10 +9,6 @@ from typing import Optional
 from app.models.contracts import FallbackSubscription
 from app.models.service_context import *
 
-class availability_type:
-    ACTIVE = "active"
-    ARCHIVED = "archived"
-
 class ServiceContextModule:
     def __init__(self, space_client: SpaceClient):
         self.space_client = space_client
@@ -23,27 +19,27 @@ class ServiceContextModule:
             response = await session.get(f"{self.space_client.http_url}/services/{service_name}")
             response.raise_for_status()
             service_data = await response.json()
-            print(f"SERVICIO: {service_data}")
+            #print(f"SERVICIO: {service_data}")
             return service_data
         
             
         except aiohttp.ClientResponseError as e:
             print(f"Error fetching service {service_name}: {e}")
-            return e
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
 
-    async def get_pricing(self,service_name: str, usage_metrics: dict)-> Pricing:
+    async def get_pricing(self,service_name: str, pricing_version:str)-> Pricing:
         session = await self.space_client._get_session()
         try:
-            response = await session.post(f"{self.space_client.http_url}/services/{service_name}/pricing", json=usage_metrics)
+            response = await session.get(f"{self.space_client.http_url}/services/{service_name}/pricings/{pricing_version}")
             response.raise_for_status()
             pricing_data = await response.json()
             return pricing_data
         except aiohttp.ClientResponseError as e:
             print(f"Error fetching pricing for service {service_name}: {e}")
-            return None
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -63,7 +59,7 @@ class ServiceContextModule:
             return data
         except aiohttp.ClientResponseError as e:
             print(f"Error posting file to {endpoint}: {e}")
-            return None
+            return e
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -80,7 +76,7 @@ class ServiceContextModule:
             return data
         except aiohttp.ClientResponseError as e:
             print(f"Error posting file to {endpoint}: {e}")
-            return None
+            return e
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -96,7 +92,7 @@ class ServiceContextModule:
             return data
         except aiohttp.ClientResponseError as e:
             print(f"Error posting URL to {endpoint}: {e}")
-            return None
+            return e
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -137,7 +133,7 @@ class ServiceContextModule:
             return service_data
         except aiohttp.ClientResponseError as e:
             print(f"Error changing availability for service {service_name}, pricing version {pricing_version}: {e}")
-            return None
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise

@@ -7,7 +7,8 @@ from app.routes.config import SpaceClient
 
 TEST_SPACE_URL = "http://localhost:5403"
 TEST_API_KEY = "57ab59b541bafc971b7588a192661ed01e3e354a9f1464f868e28a4b66931b01"
-TEST_API_KEY_DANIEL = "5878a0e39f43c66a3aa68adf80f675f2d96c46bdbe9ce58816649b768d3a671f"
+TEST_API_KEY_DANIEL = "2b5de17e4e43561b174f9bf6d6b3e961084be773878601d14f75f7d01a29911e"
+
 
 
 @pytest_asyncio.fixture

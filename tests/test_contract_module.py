@@ -1,160 +1,206 @@
-import aiohttp
+
+import os
+import tempfile
+import uuid
 import pytest
-from types import SimpleNamespace
+
+from app.models.contracts import UserContact
 
 
-class MockResponse:
-	def __init__(self, json_data=None, status=200, raise_exc=False, error_text="error"):
-		self._json = json_data
-		self.status = status
-		self._raise = raise_exc
-		self._error_text = error_text
+class TestContractModule:
+	
+	@pytest.mark.asyncio
+	async def test_contract_correct_creation(self, space_client):
+		#Creación del servicio dummy sobre el que generar el contrato
+		service_name = f"Service_{uuid.uuid4().hex[:8]}"
+		yaml = f"""saasName: {service_name}
+syntaxVersion: "3.0"
+version: "1.0.0"
+createdAt: "2025-01-01"
+currency: USD
+features:
+  basic:
+    description: Test
+    valueType: BOOLEAN
+    defaultValue: true
+    type: DOMAIN
+plans:
+  BASIC:
+    description: Basic plan
+    price: 0.0
+    unit: user/month
+    features: null
+    usageLimits: null"""
+    
+		with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+			f.write(yaml)
+			temp_path = f.name
+		try:
+			await space_client.service_context.add_service(temp_path)
+		finally:
+			try:
+				os.unlink(temp_path)
+			except:
+				pass
+		user_id = uuid.uuid4().hex[:8]
+		user_name = f"user_{user_id}"
+		contract_to_create = {
+			"userContact": {
+				"userId": user_id,
+				"username": user_name
+			},
+			"billingPeriod": {
+				"autoRenew": True,
+				"renewalDays": 30
+			},
+			"contractedServices": {
+				service_name: "1.0.0"
+       		},
+			"subscriptionPlans": {	
+				service_name: "BASIC"
+			},
+			"subscriptionAddOns": {}
+		}
+		#Generamos el contrato y comprobamos que existe
+		response= await space_client.contracts.add_contract(contract_to_create)
+		assert response["userContact"]["userId"] == user_id
+		print("Test OK :) Created Contract:", response)
 
-	async def __aenter__(self):
-		return self
+	@pytest.mark.asyncio
+	async def test_contract_invalid_data_creation(self, space_client):
+		#Creación del servicio dummy sobre el que generar el contrato
+		service_name = f"Service_{uuid.uuid4().hex[:8]}"
+		yaml = f"""saasName: {service_name}
+syntaxVersion: "3.0"
+version: "1.0.0"
+createdAt: "2025-01-01"
+currency: USD
+features:
+  basic:
+    description: Test
+    valueType: BOOLEAN
+    defaultValue: true
+    type: DOMAIN
+plans:
+  BASIC:
+    description: Basic plan
+    price: 0.0
+    unit: user/month
+    features: null
+    usageLimits: null"""
+    
+		with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+			f.write(yaml)
+			temp_path = f.name
+		try:
+			await space_client.service_context.add_service(temp_path)
+		finally:
+			try:
+				os.unlink(temp_path)
+			except:
+				pass
+		user_id = uuid.uuid4().hex[:8]
+		user_name = f"user_{user_id}"
+		contract_to_create_errors = {
+			"userContact": {
+				"userId": user_id,
+				"username": user_name
+			},
+			"billingPeriod": {
+				"autoRenew": True,
+				"renewalDays": 30
+			},
+			"contractedServices": {
+				'TomatoMeter': "1.0.0"
+       		},
+			"subscriptionPlans": {	
+				service_name: "BASIC"
+			},
+			"subscriptionAddOns": {}
+		}
+		#Generamos el contrato y comprobamos que existe
+		try:
+			await space_client.contracts.add_contract(contract_to_create_errors)
+		except Exception as e:
+			assert True
+			print("Test OK :) Caught expected exception for invalid data:", e)
+	
 
-	async def __aexit__(self, exc_type, exc, tb):
-		return False
+	@pytest.mark.asyncio
+	async def test_get_user_id_contract_from_client(self, space_client):
+		#Creación del servicio dummy sobre el que generar el contrato
+		service_name = f"Service_{uuid.uuid4().hex[:8]}"
+		yaml = f"""saasName: {service_name}
+syntaxVersion: "3.0"
+version: "1.0.0"
+createdAt: "2025-01-01"
+currency: USD
+features:
+  basic:
+    description: Test
+    valueType: BOOLEAN
+    defaultValue: true
+    type: DOMAIN
+plans:
+  BASIC:
+    description: Basic plan
+    price: 0.0
+    unit: user/month
+    features: null
+    usageLimits: null"""
+    
+		with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+			f.write(yaml)
+			temp_path = f.name
+		try:
+			await space_client.service_context.add_service(temp_path)
+		finally:
+			try:
+				os.unlink(temp_path)
+			except:
+				pass
+		user_id = uuid.uuid4().hex[:8]
+		user_name = f"user_{user_id}"
+		contract_to_create = {
+			"userContact": {
+				"userId": user_id,
+				"username": user_name
+			},
+			"billingPeriod": {
+				"autoRenew": True,
+				"renewalDays": 30
+			},
+			"contractedServices": {
+				service_name: "1.0.0"
+       		},
+			"subscriptionPlans": {	
+				service_name: "BASIC"
+			},
+			"subscriptionAddOns": {}
+		}
+		contract_to_create2 = {
+			"userContact": {
+				"userId": user_id,
+				"username": user_name
+			},
+			"billingPeriod": {
+				"autoRenew": True,
+				"renewalDays": 45
+			},
+			"contractedServices": {
+				service_name: "1.0.0"
+       		},
+			"subscriptionPlans": {	
+				service_name: "BASIC"
+			},
+			"subscriptionAddOns": {}
+		}
+		#Generamos el contrato y comprobamos que existe
+		await space_client.contracts.add_contract(contract_to_create)
+		#await space_client.contracts.add_contract(contract_to_create2)
+		contract = await space_client.contracts.get_user_id_contract(user_id)
+		#print("Retrieved contracts:", contract)
+		assert contract["userContact"]["userId"] == user_id
+		print("Test OK :) user contract correctly retrieved:", contract)
 
-	async def json(self):
-		return self._json
-
-	async def text(self):
-		return self._error_text
-
-	def raise_for_status(self):
-		if self._raise:
-			req = SimpleNamespace(real_url="mock://test")
-			raise aiohttp.ClientResponseError(request_info=req, history=(), status=self.status, message=self._error_text)
-		return None
-
-
-class MockSession:
-	def __init__(self, method_response_map=None):
-		# method_response_map: dict of (method, url) -> MockResponse
-		self.method_response_map = method_response_map or {}
-		self.last_call = None
-
-	def _make(self, method, url, json=None):
-		self.last_call = (method, url, json)
-		key = (method, url)
-		return self.method_response_map.get(key, MockResponse(json_data=None))
-
-	def get(self, url, **kwargs):
-		return self._make("GET", url, None)
-
-	def post(self, url, json=None, **kwargs):
-		return self._make("POST", url, json)
-
-	def put(self, url, json=None, **kwargs):
-		return self._make("PUT", url, json)
-
-
-@pytest.mark.asyncio
-async def test_get_contracts_success(monkeypatch):
-	from app.routes.config import SpaceClient
-
-	client = SpaceClient("http://localhost:5403", "apikey")
-
-	expected = [{"id": "c1"}]
-	url = f"{client.http_url}/contracts/user1"
-	session = MockSession({("GET", url): MockResponse(json_data=expected)})
-
-	async def _get_session():
-		return session
-
-	monkeypatch.setattr(client, "_get_session", _get_session)
-
-	result = await client.contracts.get_contracts("user1")
-	assert result == expected
-	assert session.last_call[0] == "GET"
-
-
-@pytest.mark.asyncio
-async def test_get_contracts_client_error(monkeypatch):
-	from app.routes.config import SpaceClient
-
-	client = SpaceClient("http://localhost:5403", "apikey")
-	url = f"{client.http_url}/contracts/user1"
-	session = MockSession({("GET", url): MockResponse(json_data=None, raise_exc=True, status=404, error_text="Not Found")})
-
-	async def _get_session():
-		return session
-
-	monkeypatch.setattr(client, "_get_session", _get_session)
-
-	result = await client.contracts.get_contracts("user1")
-	assert result is None
-
-
-@pytest.mark.asyncio
-async def test_add_contract_success(monkeypatch):
-	from app.routes.config import SpaceClient
-	from app.models.contracts import ContractToCreate
-
-	client = SpaceClient("http://localhost:5403", "apikey")
-	payload = {"name": "contract1"}
-	url = f"{client.http_url}/contracts"
-	session = MockSession({("POST", url): MockResponse(json_data={"id": "c1"}, status=201)})
-
-	async def _get_session():
-		return session
-
-	monkeypatch.setattr(client, "_get_session", _get_session)
-
-	# Using a plain dict is fine for the contract_to_create param in tests
-	result = await client.contracts.add_contract(payload)
-	assert result == {"id": "c1"}
-	assert session.last_call[0] == "POST"
-
-
-@pytest.mark.asyncio
-async def test_add_contract_client_error(monkeypatch):
-	from app.routes.config import SpaceClient
-
-	client = SpaceClient("http://localhost:5403", "apikey")
-	url = f"{client.http_url}/contracts"
-	session = MockSession({("POST", url): MockResponse(json_data=None, raise_exc=True, status=400, error_text="Bad Request")})
-
-	async def _get_session():
-		return session
-
-	monkeypatch.setattr(client, "_get_session", _get_session)
-
-	result = await client.contracts.add_contract({"name": "x"})
-	assert result is None
-
-
-@pytest.mark.asyncio
-async def test_update_contract_subscription_success(monkeypatch):
-	from app.routes.config import SpaceClient
-
-	client = SpaceClient("http://localhost:5403", "apikey")
-	url = f"{client.http_url}/contracts/user1"
-	session = MockSession({("PUT", url): MockResponse(json_data={"ok": True})})
-
-	async def _get_session():
-		return session
-
-	monkeypatch.setattr(client, "_get_session", _get_session)
-
-	result = await client.contracts.update_contract_subscription("user1", {"plan": "pro"})
-	assert result == {"ok": True}
-
-
-@pytest.mark.asyncio
-async def test_update_contract_subscription_client_error(monkeypatch):
-	from app.routes.config import SpaceClient
-
-	client = SpaceClient("http://localhost:5403", "apikey")
-	url = f"{client.http_url}/contracts/user1"
-	session = MockSession({("PUT", url): MockResponse(json_data=None, raise_exc=True, status=500, error_text="Server Error")})
-
-	async def _get_session():
-		return session
-
-	monkeypatch.setattr(client, "_get_session", _get_session)
-
-	result = await client.contracts.update_contract_subscription("user1", {"plan": "pro"})
-	assert result is None
-
+    

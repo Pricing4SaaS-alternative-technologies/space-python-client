@@ -13,7 +13,7 @@ TEST_API_KEY_DANIEL = "2b5de17e4e43561b174f9bf6d6b3e961084be773878601d14f75f7d01
 
 @pytest_asyncio.fixture
 async def space_client():
-    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY_PABLO)
+    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY_DANIEL)
     
     service_name = None
     unique_id = uuid.uuid4().hex[:8]

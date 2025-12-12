@@ -9,78 +9,80 @@ from typing import Optional
 from app.models.contracts import FallbackSubscription
 from app.models.service_context import *
 
-class availability_type:
-    ACTIVE = "active"
-    ARCHIVED = "archived"
-
 class ServiceContextModule:
     def __init__(self, space_client: SpaceClient):
         self.space_client = space_client
         
-    async def get_service(self,service_name: str):
+    async def get_service(self,service_name: str)->Service:
         session = await self.space_client._get_session()
         try:
             response = await session.get(f"{self.space_client.http_url}/services/{service_name}")
             response.raise_for_status()
             service_data = await response.json()
+            #print(f"SERVICIO: {service_data}")
             return service_data
+        
+            
         except aiohttp.ClientResponseError as e:
             print(f"Error fetching service {service_name}: {e}")
-            return None
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
 
-    async def get_pricing(self,service_name: str, usage_metrics: dict)-> Pricing:
+    async def get_pricing(self,service_name: str, pricing_version:str)-> Pricing:
         session = await self.space_client._get_session()
         try:
-            response = await session.post(f"{self.space_client.http_url}/services/{service_name}/pricing", json=usage_metrics)
+            response = await session.get(f"{self.space_client.http_url}/services/{service_name}/pricings/{pricing_version}")
             response.raise_for_status()
             pricing_data = await response.json()
             return pricing_data
         except aiohttp.ClientResponseError as e:
             print(f"Error fetching pricing for service {service_name}: {e}")
-            return None
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
 
-    async def _post_with_file_path(self, endpoint: str, file_path: str)-> Service:
-        form = aiohttp.FormData()
-        file_name= os.path.basename(file_path)
-        
-        with open(file_path, 'rb') as file_stream:
-            form.add_field("pricing", file_stream, file_name )
-        
-        session = await self.space_client._get_session()
+    async def _post_with_file_path(self, endpoint: str, file_path: str)-> Service:        
         try:
-            response = await session.post(endpoint, data=form)
-            response.raise_for_status()
-            data = await response.json()
-            return data
+            form = aiohttp.FormData()
+            with open(file_path, 'rb') as f:
+                form.add_field(
+                    'pricing', 
+                    f.read(),
+                    filename=os.path.basename(file_path),
+                    content_type='application/yaml'
+                )
+            
+                session = await self.space_client._get_session()
+                
+                response = await session.post(f"{self.space_client.http_url}{endpoint}", data=form)
+                response.raise_for_status()
+                data = await response.json()
+                return data
+            
         except aiohttp.ClientResponseError as e:
             print(f"Error posting file to {endpoint}: {e}")
-            return None
+            return e
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
     
-    async def _post_with_file(self, endpoint: str, file_bytes: bytes)-> Service:
-        form = aiohttp.FormData()
-        form.add_field("file", file_bytes, filename=f"{datetime.now().timestamp()}.yaml" )
-        
-        session = await self.space_client._get_session()
-        try:
-            response = await session.post(endpoint, data=form)
+    async def _post_with_file(self, endpoint: str, file: bytes) -> dict:
+        async with aiohttp.ClientSession() as session:
+            form = aiohttp.FormData()
+            form.add_field('file', file, filename='service.yml', content_type='application/x-yaml')
+            
+            # Construye la URL completa usando la base_url del SpaceClient
+            url = f"{self.space_client.base_url}{endpoint}"
+            
+            # También añade el header de API key si es necesario
+            headers = {"Authorization": f"Bearer {self.space_client.api_key}"}
+            
+            response = await session.post(url, data=form, headers=headers)
             response.raise_for_status()
-            data = await response.json()
-            return data
-        except aiohttp.ClientResponseError as e:
-            print(f"Error posting file to {endpoint}: {e}")
-            return None
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            raise
+            return await response.json()
 
     async def _post_with_url(self, endpoint: str, url: str)-> Service:
         payload = {"pricing": url}
@@ -93,7 +95,7 @@ class ServiceContextModule:
             return data
         except aiohttp.ClientResponseError as e:
             print(f"Error posting URL to {endpoint}: {e}")
-            return None
+            return e
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -124,17 +126,20 @@ class ServiceContextModule:
             raise ValueError("Fallback subscription is required when archiving a pricing version")
         session = await self.space_client._get_session()
         try:
-            url = f"{self.space_client.http_url}/services/{service_name}/pricings/{pricing_version}?availability={availability}"
+            availability_good = availability.lower()
+            url = f"{self.space_client.http_url}/services/{service_name}/pricings/{pricing_version}?availability={availability_good}"
+            print("fallback_subscription:", fallback_subscription)
             if fallback_subscription:
-                response = await session.patch(url, json=fallback_subscription)
+                response = await session.put(url, json=fallback_subscription)
+                print(f"respuesta: {response}")
             else:
-                response = await session.patch(url)
+                response = await session.put(url)
             response.raise_for_status()
             service_data = await response.json()
             return service_data
         except aiohttp.ClientResponseError as e:
             print(f"Error changing availability for service {service_name}, pricing version {pricing_version}: {e}")
-            return None
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -164,7 +169,7 @@ class ServiceContextModule:
                     
                     response.raise_for_status()
                     service_data = await response.json()
-                    print(f"Servicio creado exitosamente: {service_data}")
+                    #print(f"Servicio creado exitosamente: {service_data}")
                     return service_data
                     
         except aiohttp.ClientResponseError as e:

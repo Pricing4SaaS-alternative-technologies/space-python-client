@@ -7,45 +7,13 @@ from app.routes.config import SpaceClient
 
 TEST_SPACE_URL = "http://localhost:5403"
 TEST_API_KEY_PABLO = "57ab59b541bafc971b7588a192661ed01e3e354a9f1464f868e28a4b66931b01"
-TEST_API_KEY_DANIEL = "2b5de17e4e43561b174f9bf6d6b3e961084be773878601d14f75f7d01a29911e"
+TEST_API_KEY_DANIEL = "f7e0316af74ea3602e16081a9c38b18e1b1a63f4f1ba66088d35a9c91b71f87f"
 
 
 
 @pytest_asyncio.fixture
 async def space_client():
-    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY_PABLO)
-    
-    service_name = None
-    unique_id = uuid.uuid4().hex[:8]
-    saas_name = f"TomatoMeter_{unique_id}"
-    
-    yaml_content = f"""saasName: {saas_name}
-syntaxVersion: "3.0"
-version: "1.0.0"
-createdAt: "2025-01-01"
-currency: USD
-features:
-  basicFeature:
-    description: Basic test feature
-    valueType: BOOLEAN
-    defaultValue: true
-    type: DOMAIN"""
-    
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False, encoding='utf-8') as f:
-        f.write(yaml_content)
-        temp_yaml_path = f.name
-    
-    try:
-        result = await client.service_context.add_service(temp_yaml_path)
-        if result:
-            service_name = saas_name
-    except Exception as e:
-        print(f"Error: {e}")
-    
-    try:
-        os.unlink(temp_yaml_path) # Eliminar el archivo temporal
-    except Exception as e:
-        print(f"Error deleting temporary file: {e}")
+    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY_DANIEL)
     
     yield client
 
@@ -53,13 +21,12 @@ features:
 # LIMPIEZA: COMENTAR PARA MANTENER SERVICIO TRAS TEST
 #-------------------------------------------------------------------------------------------------------------
 
-    if service_name:
-        try:
-            session = await client._get_session()
-            delete_url = f"{f"{client.http_url}/services"}"
-            await session.delete(delete_url)
-        except Exception as e:
-            print(f"Error borrando: {e}")
+    try:
+        session = await client._get_session()
+        delete_url = f"{f"{client.http_url}/services"}"
+        await session.delete(delete_url)
+    except Exception as e:
+        print(f"Error borrando: {e}")
 
     await client.close()
 

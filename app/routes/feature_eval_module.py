@@ -43,7 +43,7 @@ class FeatureEvalModule:
     async def revert_evaluation(self, 
                                 user_id: str, 
                                 feature_id: str, 
-                                revert_to_latest: bool = True):
+                                revert_to_latest: bool = False):
         """Revierte la evaluación optimista de una característica."""
         session = await self.space_client._get_session()
         try:
@@ -52,7 +52,6 @@ class FeatureEvalModule:
                 "latest": str(revert_to_latest).lower()
             }
             
-            # ¡CORREGIDO! Usar self.space_client.http_url
             url = f"{self.space_client.http_url}/features/{user_id}/{feature_id}"
             response = await session.post(url, params=params)
             response.raise_for_status()
@@ -70,7 +69,6 @@ class FeatureEvalModule:
         """Genera un token de precios para un usuario."""
         session = await self.space_client._get_session()
         try:
-            # ¡CORREGIDO! Usar self.space_client.http_url
             url = f"{self.space_client.http_url}/features/{user_id}/pricing-token"
             response = await session.post(url)
             response.raise_for_status()

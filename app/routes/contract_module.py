@@ -9,7 +9,7 @@ class ContractModule:
     def __init__(self, space_client: "SpaceClient"):
         self.space_client = space_client
         
-    async def get_contracts(self, user_id: str):
+    async def get_user_id_contract(self, user_id: str):
         session = await self.space_client._get_session()
         try:
             async with session.get(
@@ -20,7 +20,7 @@ class ContractModule:
         except aiohttp.ClientResponseError as e:
             error_detail = await response.text()
             print(f"Error fetching contracts: {e} - {error_detail}")
-            return None
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -35,7 +35,7 @@ class ContractModule:
         except aiohttp.ClientResponseError as e:
             error_detail = await response.text()
             print(f"Error adding contract: {e} - {error_detail}")
-            return None
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
@@ -50,7 +50,7 @@ class ContractModule:
         except aiohttp.ClientResponseError as e:
             error_detail = await response.text()
             print(f"Error updating contract subscription: {e} - {error_detail}")
-            return None
+            raise
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise

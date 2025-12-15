@@ -238,7 +238,7 @@ plans:
 			temp_path = f.name
 		try:
 			response_service= await space_client.service_context.add_service(temp_path)
-			print(f"Service creted: {response_service}")
+			print(f"Service created: {response_service}")
 		finally:
 			try:
 				os.unlink(temp_path)

@@ -4,16 +4,23 @@ import pytest_asyncio
 import tempfile
 import uuid
 from app.routes.config import SpaceClient
+from dotenv import load_dotenv
+
+load_dotenv(encoding='utf-8-sig')
 
 TEST_SPACE_URL = "http://localhost:5403"
-TEST_API_KEY_PABLO = "57ab59b541bafc971b7588a192661ed01e3e354a9f1464f868e28a4b66931b01"
-TEST_API_KEY_DANIEL = "f7e0316af74ea3602e16081a9c38b18e1b1a63f4f1ba66088d35a9c91b71f87f"
+API_KEY = os.getenv('API_KEY')
+
+if not API_KEY:
+    print("API_KEY no encontrada en las variables de entorno.")
+
+print(f"API_KEY cargada: {API_KEY}")
 
 
 
 @pytest_asyncio.fixture
 async def space_client():
-    client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY_DANIEL)
+    client = SpaceClient(TEST_SPACE_URL, API_KEY)
     
     yield client
 

@@ -9,7 +9,6 @@ class TestFeatureEvalModule:
     @pytest.mark.asyncio
     async def test_evaluate_existing_feature_success(self, space_client):
         """Test de evaluación exitosa con feature que existe en el servicio"""
-        # 1. Crear servicio con una feature que SÍ existe en el sistema
         service_name = f"Service_{uuid.uuid4().hex[:8]}"
         feature_name = "basicFeature"
         
@@ -76,9 +75,9 @@ plans:
             print(f" Feature evaluation completed. eval={result.eval}")
             
             if result.error:
-                print(f"  Error: {result.error.code}: {result.error.message}")
+                print(f"Error: {result.error.code}: {result.error.message}")
             else:
-                print(f"  Success! Feature is {'enabled' if result.eval else 'disabled'}")
+                print(f"Feature is {'enabled' if result.eval else 'disabled'}")
                 
         finally:
             try:
@@ -215,7 +214,7 @@ plans:
             assert result.eval is False
             assert result.error is not None
             assert result.error.code == "FLAG_NOT_FOUND"
-            print(f" Nonexistent feature correctly returns FLAG_NOT_FOUND error")
+            print(f" Nonexistent feature correctly returns {result.error.code} error")
                 
         finally:
             try:
@@ -323,13 +322,33 @@ features:
     valueType: BOOLEAN
     defaultValue: true
     type: DOMAIN
+    expression: pricingContext['features']['api_access'] && subscriptionContext['api_calls'] <= pricingContext['usageLimits']['api_calls']
+usageLimits:
+    api_calls:
+        description: 'api_calls'
+        valueType: NUMERIC
+        defaultValue: 10
+        unit: timer
+        type: RENEWABLE
+        period:
+          unit: DAY
+          value: 30
+        linkedFeatures:
+          - api_access
 plans:
   BASIC:
     description: Basic plan
     price: 0.0
     unit: user/month
-    features: null
-    usageLimits: null"""
+    features: 
+        api_access:
+          value: true
+    usageLimits:
+        api_calls:
+          value: 10
+
+        
+    """
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
             f.write(yaml)
@@ -362,21 +381,22 @@ plans:
             
             result = await space_client.featureEvaluators.evaluate(
                 user_id=user_id,
-                feature_id="api_access",
+                feature_id=f"{service_name.lower()}-api_access",
                 options={"server": True}
             )
             
-            assert result is not None
-            print(f" Evaluation with server option completed")
+            resultadoAntiguo = result
+            print(f" Evaluation with server option completed: {resultadoAntiguo}")
             
             result = await space_client.featureEvaluators.evaluate(
                 user_id=user_id,
-                feature_id="api_access",
-                expected_consumption={"api_calls": 1}
+                feature_id=f"{service_name.lower()}-api_access",
+                expected_consumption={f"{service_name.lower()}-api_calls": 1}
             )
             
-            assert result is not None
-            print(f"Evaluation with expected consumption completed")
+            resultadoNuevo = result
+            assert resultadoAntiguo.used != resultadoNuevo.used
+            print(f"Evaluation with expected consumption completed: {resultadoNuevo}")
                 
         finally:
             try:

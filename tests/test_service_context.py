@@ -38,6 +38,8 @@ features:
                 os.unlink(temp_path)
             except:
                 pass
+            
+        print(f"Servicio obtenido: {service}")
 
     @pytest.mark.asyncio
     async def test_get_service_not_found(self, space_client):
@@ -79,7 +81,7 @@ features:
                 os.unlink(temp_path)
             except:
                 pass
-
+        print(f"Servicio añadido: {result}")
     @pytest.mark.asyncio
     async def test_add_pricing_validation(self, space_client):
         """Test: validaciones de add_pricing"""
@@ -126,7 +128,7 @@ features:
                 os.unlink(temp_path)
             except:
                 pass
-
+        print(f"Pricing obtenido: {pricing}")
 
     @pytest.mark.asyncio 
     async def test_get_pricing_not_found(self, space_client):

@@ -13,8 +13,10 @@ API_KEY = os.getenv('API_KEY')
 
 if not API_KEY:
     print("API_KEY no encontrada en las variables de entorno.")
+    print("-------------------------------------------------------------------------------------------------------------")
 
 print(f"API_KEY cargada: {API_KEY}")
+print("-------------------------------------------------------------------------------------------------------------")
 
 
 
@@ -23,6 +25,7 @@ async def space_client():
     client = SpaceClient(TEST_SPACE_URL, API_KEY)
     
     yield client
+    print("-------------------------------------------------------------------------------------------------------------")
 
 #-------------------------------------------------------------------------------------------------------------
 # LIMPIEZA: COMENTAR PARA MANTENER SERVICIO TRAS TEST
@@ -31,7 +34,9 @@ async def space_client():
     try:
         session = await client._get_session()
         delete_url = f"{f"{client.http_url}/services"}"
+        delete_url2 = f"{f"{client.http_url}/contracts"}"
         await session.delete(delete_url)
+        await session.delete(delete_url2)
     except Exception as e:
         print(f"Error borrando: {e}")
 

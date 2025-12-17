@@ -49,30 +49,23 @@ async def space_client():
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def cleanup_all_services_after_tests():
-    """
-    Fixture de sesión que borra todos los servicios después de ejecutar todos los tests.
-    """
-    yield  # Aquí se ejecutan todos los tests
+    yield
     
-    # Después de todos los tests, borrar todos los servicios
-    print(f"\n{'='*60}")
-    print("🧹 LIMPIANDO TODOS LOS SERVICIOS (sesión finalizada)")
-    print(f"{'='*60}")
+    print("LIMPIANDO TODOS LOS SERVICIOS (sesión finalizada)")
     
     client = SpaceClient(TEST_SPACE_URL, TEST_API_KEY)
     
     try:
         session = await client._get_session()
         
-        # Borrar TODOS los servicios
         delete_response = await session.delete(f"{client.http_url}/services")
         if delete_response.status in [200, 204]:
-            print(f"✅ Todos los servicios borrados exitosamente")
+            print(f"Todos los servicios borrados exitosamente")
         else:
             error_text = await delete_response.text()
-            print(f"⚠ No se pudieron borrar los servicios: {delete_response.status} - {error_text}")
+            print(f"No se pudieron borrar los servicios: {delete_response.status} - {error_text}")
     except Exception as e:
-        print(f"⚠ Error en limpieza final: {e}")
+        print(f"Error en limpieza final: {e}")
     finally:
         await client.close()
         

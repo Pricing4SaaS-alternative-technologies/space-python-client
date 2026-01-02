@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "app_SpacePyCl"
+version = "0.0.1"
+authors = [
+  { name="PyCl_Test_Team", email="tfgpetclinic@gmail.com" }
+]
+description = "Paquete del cliente backend de SPACE"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/Pricing4SaaS-alternative-technologies/space-python-client"
+Issues = "https://github.com/Pricing4SaaS-alternative-technologies/space-python-client/issues"

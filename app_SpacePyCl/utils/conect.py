@@ -1,5 +1,5 @@
-from app.utils import SpaceConnectionOptions
-from app.routes.config import SpaceClient
+from app_SpacePyCl.utils import SpaceConnectionOptions
+from app_SpacePyCl.routes.config import SpaceClient
 
 def connect(options: SpaceConnectionOptions) -> SpaceClient:
     """

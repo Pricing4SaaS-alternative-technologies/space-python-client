@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .config import SpaceClient
 from typing import Dict, Union
-from app.models.feature_eval_result import FeatureEvaluationResult
+from app_SpacePyCl.models.feature_eval_result import FeatureEvaluationResult
 
 class FeatureEvalModule:
     def __init__(self, space_client: SpaceClient):

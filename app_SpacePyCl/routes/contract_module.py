@@ -3,7 +3,7 @@ import aiohttp
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .config import SpaceClient
-from app.models.contracts import ContractToCreate, Subscription
+from app_SpacePyCl.models.contracts import ContractToCreate, Subscription
  
 class ContractModule:
     def __init__(self, space_client: "SpaceClient"):

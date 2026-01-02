@@ -3,7 +3,7 @@ import pytest
 import pytest_asyncio
 import tempfile
 import uuid
-from app.routes.config import SpaceClient
+from app_SpacePyCl.routes.config import SpaceClient
 from dotenv import load_dotenv
 
 load_dotenv(encoding='utf-8-sig')

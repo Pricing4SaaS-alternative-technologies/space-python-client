@@ -6,8 +6,8 @@ if TYPE_CHECKING:
 from datetime import datetime
 import os
 from typing import Optional
-from app.models.contracts import FallbackSubscription
-from app.models.service_context import *
+from app_SpacePyCl.models.contracts import FallbackSubscription
+from app_SpacePyCl.models.service_context import *
 
 class ServiceContextModule:
     def __init__(self, space_client: SpaceClient):

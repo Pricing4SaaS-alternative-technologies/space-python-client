@@ -18,8 +18,7 @@ class ContractModule:
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientResponseError as e:
-            error_detail = await response.text()
-            print(f"Error fetching contracts: {e} - {error_detail}")
+            print(f"Error fetching contracts: {e}")
             raise
         except Exception as e:
             print(f"Unexpected error: {e}")
@@ -33,8 +32,7 @@ class ContractModule:
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientResponseError as e:
-            error_detail = await response.text()
-            print(f"Error adding contract: {e} - {error_detail}")
+            print(f"Error adding contract: {e}")
             raise
         except Exception as e:
             print(f"Unexpected error: {e}")
@@ -48,8 +46,7 @@ class ContractModule:
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientResponseError as e:
-            error_detail = await response.text()
-            print(f"Error updating contract subscription: {e} - {error_detail}")
+            print(f"Error updating contract subscription: {e}")
             raise
         except Exception as e:
             print(f"Unexpected error: {e}")

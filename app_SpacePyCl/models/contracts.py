@@ -65,3 +65,6 @@ class Contract(BaseModel):
     subscriptionAddOns: Dict[str, Dict[str, int]]
     
     history: List[ContractHistoryEntry]
+
+class UsageLevelUpdate(BaseModel):
+    usageLevels: Dict[str, Dict[str, UsageLevel]]

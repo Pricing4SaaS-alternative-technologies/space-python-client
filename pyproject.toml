@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "app_SpacePyCl"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="PyCl_Test_Team", email="tfgpetclinic@gmail.com" }
 ]

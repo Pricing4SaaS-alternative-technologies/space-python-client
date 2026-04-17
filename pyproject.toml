@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "app_SpacePyCl"
-version = "0.0.4"
+version = "1.0.0"
 authors = [
-  { name="PyCl_Test_Team", email="tfgpetclinic@gmail.com" }
+  { name="PyCl_Team", email="tfgpetclinic@gmail.com" }
 ]
 description = "Paquete del cliente backend de SPACE"
 readme = "README.md"

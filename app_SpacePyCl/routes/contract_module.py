@@ -3,7 +3,7 @@ import aiohttp
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .config import SpaceClient
-from app_SpacePyCl.models.contracts import ContractToCreate, Subscription
+from app_SpacePyCl.models.contracts import ContractToCreate, Subscription, UsageLevelUpdate, UsageLevel
  
 class ContractModule:
     def __init__(self, space_client: "SpaceClient"):
@@ -18,8 +18,7 @@ class ContractModule:
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientResponseError as e:
-            error_detail = await response.text()
-            print(f"Error fetching contracts: {e} - {error_detail}")
+            print(f"Error fetching contracts: {e}")
             raise
         except Exception as e:
             print(f"Unexpected error: {e}")
@@ -33,8 +32,7 @@ class ContractModule:
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientResponseError as e:
-            error_detail = await response.text()
-            print(f"Error adding contract: {e} - {error_detail}")
+            print(f"Error adding contract: {e}")
             raise
         except Exception as e:
             print(f"Unexpected error: {e}")
@@ -48,8 +46,36 @@ class ContractModule:
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientResponseError as e:
-            error_detail = await response.text()
-            print(f"Error updating contract subscription: {e} - {error_detail}")
+            print(f"Error updating contract subscription: {e}")
+            raise
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            raise
+        
+    async def update_usage_levels(self, user_id: str, usageLevels: dict[str, dict[str, int]]):
+        # El backend espera valores numéricos directos, no objetos UsageLevel
+        transformed_levels = {}
+        
+        for service_name, metrics in usageLevels.items():
+            transformed_metrics = {}
+            for metric_name, value in metrics.items():
+                # Si el valor ya es un dict (con 'consumed'), extraer el valor
+                if isinstance(value, dict) and 'consumed' in value:
+                    transformed_metrics[metric_name] = value['consumed']
+                else:
+                    transformed_metrics[metric_name] = value
+            
+            transformed_levels[service_name.lower()] = transformed_metrics
+            
+        session = await self.space_client._get_session()
+        url = f"{self.space_client.http_url}/contracts/{user_id}/usageLevels"
+        
+        try:
+            async with session.put(url, json=transformed_levels) as response:
+                response.raise_for_status()
+                return await response.json()
+        except aiohttp.ClientResponseError as e:
+            print(f"Error updating usage levels: {e}")
             raise
         except Exception as e:
             print(f"Unexpected error: {e}")

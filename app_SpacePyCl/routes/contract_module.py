@@ -80,3 +80,21 @@ class ContractModule:
         except Exception as e:
             print(f"Unexpected error: {e}")
             raise
+        
+    async def update_user_contact(self, user_id: str, contact_data: dict):
+        """
+        Updates the user contact information of a contract in SPACE.
+        """
+        session = await self.space_client._get_session()
+        url = f"{self.space_client.http_url}/contracts/{user_id}/userContact"
+        
+        try:
+            async with session.put(url, json=contact_data) as response:
+                response.raise_for_status()
+                return await response.json()
+        except aiohttp.ClientResponseError as e:
+            print(f"Error updating user contact in contract: {e}")
+            raise
+        except Exception as e:
+            print(f"Unexpected error updating user contact: {e}")
+            raise
